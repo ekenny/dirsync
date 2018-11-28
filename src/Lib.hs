@@ -55,7 +55,6 @@ copyIfNewer :: MonadIO m => FilePath -> FilePath -> m ()
 copyIfNewer s t = do
   n <- liftIO $ sourceNewer s t
   if n then do
-      liftIO.print $ ("working on", s, t)
       liftIO $ copyFile s t
       liftIO.print $ ("copied", s, t)
     else return ()

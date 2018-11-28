@@ -1,0 +1,35 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<plist version="1.0">
+
+<dict>
+
+    <key>Label</key>
+
+    <string>Directory Sync</string>
+
+    <key>ProgramArguments</key>
+
+    <array>
+        <string>dirsync</string>
+        <string>/usr/local/libexec/dirsync.conf</string>
+    </array>
+
+    <key>StartInterval</key>
+
+    <integer>1200</integer>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/dirsync.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/dirsync.log</string>
+
+    <key>Debug</key>
+    <true/>
+</dict>
+
+</plist>
