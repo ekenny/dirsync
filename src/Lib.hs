@@ -4,11 +4,13 @@ module Lib
 
 
 import Config
+import Control.Monad
 import Control.Monad.IO.Class
 import System.Directory
 import System.Posix.Files
 import System.Posix.Types
 import System.FilePath.Posix
+
 
 syncConfiguredPaths :: MonadIO m => Maybe DirSyncConfig -> m ()
 syncConfiguredPaths Nothing = liftIO . print $ "Unable to read configuration"
@@ -18,30 +20,34 @@ syncConfiguredPaths (Just (DirSyncConfig dms)) =
     return ()
 
 syncPathConfig :: MonadIO m => DirMapping -> m()
-syncPathConfig dm@(DirMapping{source=src, destination=dest}) = do
+syncPathConfig dm@(DirMapping{source=src, destination=dest, ignore=ig}) = do
   fs <- liftIO.getFileStatus $ src
-  syncItem' (isDirectory fs) src dest
+  unless (shouldSkip ig src) (syncItem' (isDirectory fs) src dest (shouldSkip ig))
 
-syncItem' :: MonadIO m => Bool -> FilePath -> FilePath -> m ()
-syncItem' isDir src dest | isDir == False = copyIfNewer src dest
-                         | isDir == True =
+shouldSkip :: IgnoreList -> FilePath  -> Bool
+shouldSkip il f = fn `elem` il
+  where fn = takeFileName f
+
+syncItem' :: MonadIO m => Bool -> FilePath -> FilePath -> (FilePath -> Bool)-> m ()
+syncItem' isDir src dest skip | isDir == False = copyIfNewer src dest
+                              | isDir == True =
   do
     liftIO . print $ (src,  dest)
     liftIO $ createDirectoryIfMissing True {- create parents -} dest
     absPaths <- liftIO . getAbsoluteItems $ src
-    syncDirectoryContent absPaths dest
+    syncDirectoryContent absPaths dest skip
 
 getAbsoluteItems :: FilePath -> IO [FilePath]
 getAbsoluteItems dir = do
     paths <- listDirectory dir
     return $ map (combine dir) $ paths
 
-syncDirectoryContent :: MonadIO m => [FilePath] -> FilePath -> m ()
-syncDirectoryContent [] _ = return ()
-syncDirectoryContent (fp:fps) dest = do
+syncDirectoryContent :: MonadIO m => [FilePath] -> FilePath -> (FilePath -> Bool) -> m ()
+syncDirectoryContent [] _ _ = return ()
+syncDirectoryContent (fp:fps) dest skip = do
   fs <- liftIO.getFileStatus $ fp
-  syncItem' (isDirectory fs) fp destFile
-  syncDirectoryContent fps dest
+  unless (skip fp) (syncItem' (isDirectory fs) fp destFile skip)
+  syncDirectoryContent fps dest skip
   where
     destFile = dest </> (takeFileName fp)
 
