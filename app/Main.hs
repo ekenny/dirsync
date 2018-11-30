@@ -10,6 +10,8 @@ import System.Environment
 main :: IO ()
 main = do
   args <- getArgs
-  conf <- BS.readFile (args !! 0)
+  print ("Started with args: ", args)
+  conf <- BS.readFile $ Prelude.head args 
   config <- return $ decode conf
-  syncConfiguredPaths config
+  count <- syncConfiguredPaths config
+  print $ "Complete.  Files Copied: " ++ show count

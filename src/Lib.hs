@@ -12,53 +12,58 @@ import System.Posix.Types
 import System.FilePath.Posix
 
 
-syncConfiguredPaths :: MonadIO m => Maybe DirSyncConfig -> m ()
-syncConfiguredPaths Nothing = liftIO . print $ "Unable to read configuration"
+syncConfiguredPaths :: MonadIO m => Maybe DirSyncConfig -> m Integer
+syncConfiguredPaths Nothing = do liftIO . print $ "Unable to read configuration"; return 0
 syncConfiguredPaths (Just (DirSyncConfig dms)) =
   do
-    mapM syncPathConfig dms
-    return ()
+    fileCounts <- mapM syncPathConfig dms
+    return (sum fileCounts)
 
-syncPathConfig :: MonadIO m => DirMapping -> m()
-syncPathConfig dm@(DirMapping{source=src, destination=dest, ignore=ig}) = do
+syncPathConfig :: MonadIO m => DirMapping -> m Integer
+syncPathConfig dm@DirMapping{source=src, destination=dest, ignore=ig} = do
   fs <- liftIO.getFileStatus $ src
-  unless (shouldSkip ig src) (syncItem' (isDirectory fs) src dest (shouldSkip ig))
+  if shouldSkip ig src
+    then return 0
+    else syncItem' (isDirectory fs) src dest (shouldSkip ig) 0
 
 shouldSkip :: IgnoreList -> FilePath  -> Bool
 shouldSkip il f = fn `elem` il
   where fn = takeFileName f
 
-syncItem' :: MonadIO m => Bool -> FilePath -> FilePath -> (FilePath -> Bool)-> m ()
-syncItem' isDir src dest skip | isDir == False = copyIfNewer src dest
-                              | isDir == True =
+syncItem' :: MonadIO m => Bool -> FilePath -> FilePath -> (FilePath -> Bool) -> Integer -> m Integer
+syncItem' isDir src dest skip cnt | not isDir = do 
+                                              copyIfNewer src dest 
+                                              return (cnt + 1)
+                                  | isDir =
   do
     liftIO . print $ (src,  dest)
-    liftIO $ createDirectoryIfMissing True {- create parents -} dest
+    liftIO $ createDirectoryIfMissing True dest {- True means create parents -} 
     absPaths <- liftIO . getAbsoluteItems $ src
-    syncDirectoryContent absPaths dest skip
+    syncDirectoryContent absPaths dest skip cnt
 
 getAbsoluteItems :: FilePath -> IO [FilePath]
 getAbsoluteItems dir = do
     paths <- listDirectory dir
-    return $ map (combine dir) $ paths
+    return $ map (combine dir) paths
 
-syncDirectoryContent :: MonadIO m => [FilePath] -> FilePath -> (FilePath -> Bool) -> m ()
-syncDirectoryContent [] _ _ = return ()
-syncDirectoryContent (fp:fps) dest skip = do
+syncDirectoryContent :: MonadIO m => [FilePath] -> FilePath -> (FilePath -> Bool) -> Integer -> m Integer
+syncDirectoryContent [] _ _ _ = return 0
+syncDirectoryContent (fp:fps) dest skip cnt = do
   fs <- liftIO.getFileStatus $ fp
-  unless (skip fp) (syncItem' (isDirectory fs) fp destFile skip)
-  syncDirectoryContent fps dest skip
+  newCnt <- if skip fp
+               then return 0
+               else syncItem' (isDirectory fs) fp destFile skip cnt
+  syncDirectoryContent fps dest skip newCnt
   where
-    destFile = dest </> (takeFileName fp)
+    destFile = dest </> takeFileName fp
 
 copyIfNewer :: MonadIO m => FilePath -> FilePath -> m ()
 copyIfNewer s t = do
   n <- liftIO $ sourceNewer s t
-  if n then do
+  when n $ do
       liftIO $ copyFile s t
-      liftIO.print $ ("copied", s, t)
-    else return ()
-
+      liftIO.print $ ("copied", s, "->", t)
+  
 sourceNewer :: FilePath -> FilePath -> IO Bool
 sourceNewer src target = do
    targetExists <- fileExist target
