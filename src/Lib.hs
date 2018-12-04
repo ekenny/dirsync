@@ -13,9 +13,8 @@ import System.FilePath.Posix
 import UnliftIO.Exception
 
 
-syncConfiguredPaths :: Maybe DirSyncConfig ->  IO Integer
-syncConfiguredPaths Nothing = do liftIO . print $ "Unable to read configuration"; return 0
-syncConfiguredPaths (Just (DirSyncConfig dms)) = do
+syncConfiguredPaths :: DirSyncConfig ->  IO Integer
+syncConfiguredPaths (DirSyncConfig dms) = do
     fileCounts <- mapM syncPathConfig dms
     return (sum fileCounts)
 
