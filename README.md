@@ -1,11 +1,45 @@
 # dirsync
 
+Dirsync is a simple little tool to back up files and directories from the local
+file system to another location in the file system (presumably a mounted
+network share.)  
+
+It accepts a json-encoded configuration file on the command line.  The json is a
+list of source and destination specifications, like this:
+
+```json
+  [
+    {   "source": "/users/me/documents"
+      , "destination": "/Volumes/remote_mount_point/documents"
+      , "ignore": ["personal", "image.png"]
+    }
+  ]
+```
+The `ignore` list is just a literal match right now.  Wildcards/globbing are not
+supported yet.  So in the example above a directory or file named "personal"
+would be skipped.
+
+## Building and Installing
+
+`stack build`
+`stack install`
+
+Will install the binary in ~/.local/bin
+
+
+## Running
+
+`dirsync path/to/dirsync.conf`
 
 
 
 ## For running as daemon on Mac OS X
 
- For a complete listing of the keys, see the launchd.plist manual page.
+I have been unable to get this to work as a LaunchAgent, so I'm running this
+as a cron job for now.  But below are some notes I grabbed about setting
+up a LaunchAgent.
+
+For a complete listing of the keys, see the launchd.plist manual page.
 
 https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html#//apple_ref/doc/uid/TP40001762-104142
 
