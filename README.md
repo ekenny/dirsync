@@ -9,9 +9,16 @@ list of source and destination specifications, like this:
 
 ```json
   [
-    {   "source": "/users/me/documents"
-      , "destination": "/Volumes/remote_mount_point/documents"
+    {   
+        "source": "/users/me/documents"
+      , "destination": "/Volumes/mount_point/documents"
       , "ignore": ["personal", "image.png"]
+    }
+    ,
+    {  
+        "source": "/users/me/sripts"
+      , "destination": "/Volumes/mount_point/scripts"
+      , "ignore": []
     }
   ]
 ```
