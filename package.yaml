@@ -21,6 +21,7 @@ description:         Please see the README on GitHub at <https://github.com/eken
 
 dependencies:
 - base >= 4.7 && < 5
+- unliftio >= 0.2.8.1 && < 0.3.0.0
 
 library:
   source-dirs: src
