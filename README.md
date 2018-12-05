@@ -28,10 +28,23 @@ would be skipped.
 
 ## Building and Installing
 
-`stack build`
-`stack install`
+Install the stack tool
 
-Will install the binary in ~/.local/bin
+```
+curl -sSL https://get.haskellstack.org/ | sh
+
+```
+Now you're ready to build and install.  Just do...
+
+```
+stack build
+```
+
+```
+stack install
+```
+
+The binary will be installed in ~/.local/bin
 
 
 ## Running
