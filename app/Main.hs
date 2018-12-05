@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Dirsync
 import System.Directory
 import Data.ByteString.Lazy.Char8 as BS
 import Config
