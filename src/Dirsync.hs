@@ -79,7 +79,7 @@ copyIfNewer s d cnt = do
     newer <- sourceNewer s d
     if newer then do
         copyFile s d
-        print ("copied", s, "->", d)
+        print $ "Copied " ++ show s ++ "->" ++ show d
         return (cnt + 1)
     else return cnt
   
