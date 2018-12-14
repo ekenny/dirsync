@@ -7,9 +7,10 @@ import Config
 import Control.Monad
 import Control.Monad.IO.Class
 import System.Directory
+import System.FilePath.Glob
+import System.FilePath.Posix
 import System.Posix.Files
 import System.Posix.Types
-import System.FilePath.Posix
 import UnliftIO.Exception
 
 
@@ -33,8 +34,10 @@ syncPathConfig' dm@DirMapping{source=src, destination=dest, ignore=ig} = do
         else syncItem (isDirectory fs) src dest (shouldSkip ig) 0
 
 shouldSkip :: IgnoreList -> FilePath  -> Bool
-shouldSkip il f = fn `elem` il
+shouldSkip il f = any matching patternList
     where fn = takeFileName f
+          matching = flip match fn
+          patternList = map compile il
 
 syncItem :: Bool -> FilePath -> FilePath -> (FilePath -> Bool) -> Integer -> IO Integer
 syncItem isDir src dest skip cnt = do 
