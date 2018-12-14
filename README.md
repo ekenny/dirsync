@@ -4,7 +4,11 @@ Dirsync is a simple little tool to back up files and directories from the local
 file system to another location in the file system (presumably a mounted
 network share.)  
 
-It accepts a json-encoded configuration file on the command line.  The json is a
+It only exists because we don't have time machine backups for our macbooks at
+work and I wanted to have some kind of minimal backup until a better solution is
+in place.  This is the product of several months worth of lost files.
+
+Dirsync accepts a json-encoded configuration file on the command line.  The json is a
 list of source and destination specifications, like this:
 
 ```json
@@ -12,19 +16,19 @@ list of source and destination specifications, like this:
     {   
         "source": "/users/me/documents"
       , "destination": "/Volumes/mount_point/documents"
-      , "ignore": ["personal", "image.png"]
+      , "ignore": ["personal", "image.png", ".*.swp"]
     }
     ,
     {  
         "source": "/users/me/sripts"
       , "destination": "/Volumes/mount_point/scripts"
-      , "ignore": []
+      , "ignore": [".git"]
     }
   ]
 ```
-The `ignore` list is just a literal match right now.  Wildcards/globbing are not
-supported yet.  So in the example above a directory or file named "personal"
-would be skipped.
+
+The "ignore" list now allows wildcards like you would use with bash.
+
 
 ## Building and Installing
 
@@ -49,9 +53,20 @@ The binary will be installed in ~/.local/bin
 
 ## Running
 
-`dirsync path/to/dirsync.conf`
+```bash 
+dirsync path/to/dirsync.conf
+```
 
+There is an example run script in the resources directory.  To use it, you would
+want to modify it for your user id, etc.  
 
+This tool is most useful if you set it up to run periodically using cron.
+
+Right now my `crontab -l` reports this (runs every 20 minutes):
+
+```
+*/20 * * * * /Users/<myuserid>/scripts/rundirsync.sh
+```
 
 ## For running as daemon on Mac OS X
 
@@ -80,4 +95,3 @@ The following example enables core dumps, sets standard out and error to go to a
 log file, and instructs launchd to temporarily increase the debug level of its
 logging while acting on behalf of your job (remember to adjust your syslog.conf
 accordingly):
-  
